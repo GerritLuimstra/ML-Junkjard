@@ -1,7 +1,7 @@
 import numbers
 import pandas as pd
 import numpy as np
-
+from util.criterions import RSS, RMSE
 
 class RegressionTree:
 
@@ -92,17 +92,14 @@ class DecisionTreeRegressor:
         optimal_split_point = self._find_optimal_split_point(features, response, criterion_function)
 
         # If the split cannot be made, return a terminal node
-        if optimal_split_point is None:
+        # Additionally, only allow a certain amount of splits, if set
+        if (optimal_split_point is None) or (self.max_splits is not None and self.current_splits >= self.max_splits):
 
             # Create the response tree
             response_tree = RegressionTree()
             response_tree.response = response.mean()
 
             return response_tree
-
-        # Only allow a certain amount of splits, if set
-        if self.max_splits is not None and self.current_splits >= self.max_splits:
-            return None
 
         # At this point, a split was made
         split_point, left_branch, left_response, right_branch, right_response = self._find_optimal_split_point(features, response, criterion_function)
@@ -178,32 +175,20 @@ class DecisionTreeRegressor:
         return optimal_split, left_branch, left_response, right_branch, right_response
 
 
-def RSS(response):
-
-    # Obtain the main response
-    mean_response = response.mean()
-
-    # Compute the RSS
-    return sum((response - mean_response)**2), mean_response
-
-
-def RMSE(y, y_hat):
-    return sum((y - y_hat)**2)**(1/2)
-
-
 if __name__ == "__main__":
 
     dataset = pd.read_csv("Hitters.csv", index_col="Unnamed: 0")
     dataset = dataset.dropna()
 
-    feature_names = set(dataset.columns) - set(["Salary"]) #["Years", "Hits"]
+    feature_names = ["Years", "Hits"] # set(dataset.columns) - set(["Salary"])
     features = dataset[feature_names]
     response = dataset["Salary"]
     response = np.log10(response)
 
     # Define the regressor
-    regressor = DecisionTreeRegressor(min_leaf_size=5)
+    regressor = DecisionTreeRegressor(min_leaf_size=5, max_splits=5)
     regressor.fit(features, response, RSS)
+
     predictions = regressor.predict(features)
 
     # Calculate the RMSE

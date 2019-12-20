@@ -1,4 +1,4 @@
-from sklearn.utils import resample
+from util.criterions import RSS, RMSE
 from DecisionTreeRegression.regression_tree import DecisionTreeRegressor
 import pandas as pd
 import numpy as np
@@ -73,19 +73,6 @@ class RandomForestRegressor:
             response.append(sum_so_far / self.n_trees)
 
         return response
-
-
-def RSS(response):
-
-    # Obtain the main response
-    mean_response = response.mean()
-
-    # Compute the RSS
-    return sum((response - mean_response)**2), mean_response
-
-
-def RMSE(y, y_hat):
-    return sum((y - y_hat)**2)**(1/2)
 
 
 if __name__ == "__main__":
