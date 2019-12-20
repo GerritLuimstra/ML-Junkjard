@@ -14,9 +14,11 @@ class RegressionTree:
 
 class DecisionTreeRegressor:
 
-    def __init__(self, min_leaf_size=2):
+    def __init__(self, min_leaf_size=2, max_splits=None):
         self.min_leaf_size = min_leaf_size
         self.feature_names = None
+        self.max_splits = max_splits
+        self.current_splits = 0
 
         # We start with an empty regression tree
         self.tree = RegressionTree()
@@ -98,8 +100,15 @@ class DecisionTreeRegressor:
 
             return response_tree
 
+        # Only allow a certain amount of splits, if set
+        if self.max_splits is not None and self.current_splits >= self.max_splits:
+            return None
+
         # At this point, a split was made
         split_point, left_branch, left_response, right_branch, right_response = self._find_optimal_split_point(features, response, criterion_function)
+
+        # Keep track of the current splits made
+        self.current_splits += 1
 
         # Set the split point
         tree.split_point = split_point
