@@ -63,8 +63,6 @@ class BoostedRegressionTree:
                 # Update the learning rate
                 learning_rate = self.learning_rate_scheduler(learning_rate, i)
 
-            print(RMSE(self.predict(X), y))
-
     """
         Given an input X, compute the response Y
     """
