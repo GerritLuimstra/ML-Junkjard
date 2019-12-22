@@ -1,4 +1,5 @@
 # Implemented:
+- k-Nearest Neighbours
 - NaiveBayes classifier
 - KMeans Clustering
 - (Non gradient!) BoostedRegression
@@ -7,7 +8,6 @@
 
 # To implement:
 - PCA
-- kNN
 - Linear Regression
 - Logistic Regression
 - Perceptron
