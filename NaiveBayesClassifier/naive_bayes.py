@@ -4,12 +4,14 @@ import numpy as np
 
 class NaiveBayesClassifier:
 
+    """
+        Note that the word Naive stems from the fact that the classifier assumes that the variables are independent!
+    """
     def __init__(self):
         self.p_y = None
         self.p_x_y = None
         self.p_x = None
         self.class_names = None
-
 
     """
         Fits according to the bayes algorithm
@@ -26,7 +28,7 @@ class NaiveBayesClassifier:
 
         p_y = []
         for class_name in self.class_names:
-           p_y.append(sum(y == class_name))
+            p_y.append(sum(y == class_name))
         p_y = np.array(p_y) / len(y)
 
         # Compute the probability of X, given a class
