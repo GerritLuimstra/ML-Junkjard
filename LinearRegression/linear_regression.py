@@ -11,6 +11,11 @@ class LinearRegression:
         NOTE: This implementation heavily uses normal equations and is therefor not an iterative approach.
     """
     def __init__(self, fit_intercept=True):
+        """
+        Initializes the model
+
+        :param bool fit_intercept: Whether or not the intercept should be included in the fit
+        """
         self.fit_intercept = fit_intercept
         self.B = None
 
