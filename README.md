@@ -1,4 +1,5 @@
 # Implemented:
+- Linear Regression
 - PCA
 - k-Nearest Neighbours
 - NaiveBayes classifier
@@ -8,7 +9,6 @@
 - DecisionTreeRegression
 
 # To implement:
-- Linear Regression
 - Logistic Regression
 - Perceptron
 - Neural Network
