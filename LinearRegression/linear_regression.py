@@ -10,7 +10,8 @@ class LinearRegression:
     """
         NOTE: This implementation heavily uses normal equations and is therefor not an iterative approach.
     """
-    def __init__(self):
+    def __init__(self, fit_intercept=True):
+        self.fit_intercept = fit_intercept
         self.B = None
 
     def fit(self, X, y):
@@ -31,8 +32,9 @@ class LinearRegression:
         # Setting it to zero yields:
         # 2X.T(y - XB) = 0 => X.T(y - XB) = 0 => B = (X.TX)^(-1)(X.Ty)
 
-        # Append a column of 1's to X for the betas
-        X = np.c_[np.ones(len(X)), X]
+        # Append a column of 1's to X for the betas if set
+        if self.fit_intercept:
+            X = np.c_[np.ones(len(X)), X]
 
         # Compute the betas
         self.B = LA.inv((X.T.dot(X))).dot(X.T.dot(y))
@@ -52,8 +54,9 @@ class LinearRegression:
         if self.B is None:
             raise Exception("The model has not been fit yet!")
 
-        # Append a column of 1's to X for the betas
-        X = np.c_[np.ones(len(X)), X]
+        # Append a column of 1's to X for the betas, if set
+        if self.fit_intercept:
+            X = np.c_[np.ones(len(X)), X]
 
         # Dot X with the fit betas
         return X.dot(self.B)
@@ -76,7 +79,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Define the model and fit it
-    model = LinearRegression()
+    model = LinearRegression(fit_intercept=True)
     model.fit(X, y)
 
     # Obtain the betas
