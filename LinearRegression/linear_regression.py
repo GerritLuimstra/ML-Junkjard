@@ -26,7 +26,7 @@ class LinearRegression:
         :param pandas.DataFrame X: The data on which the betas will be based
         :param pandas.Series y: The response variable that is to be modelled
         """
-        # We start of nothing that the criterion we want to minimize is the residual sum of squares.
+        # We start with noting that the criterion we want to minimize is the residual sum of squares.
         # The residual sum of squares can be defined as RSS(B) = SUM((yi - f(xi)^2)).
         # In terms of matrices, this results to (y - XB)^T(y - XB), which is a quadratic formula.
         # One can simply deduce that a quadratic formula has just one extreme value; the minima of said function.
