@@ -1,4 +1,5 @@
 # Implemented:
+- Logistic Regression
 - Linear Regression
 - PCA
 - k-Nearest Neighbours
@@ -9,7 +10,6 @@
 - DecisionTreeRegression
 
 # To implement:
-- Logistic Regression
 - Perceptron
 - Neural Network
 - Support Vector Machine
