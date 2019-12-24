@@ -92,6 +92,7 @@ if __name__ == "__main__":
 
     # Plot the line along with the data
     sns.scatterplot(x="X", y="Y", data=dataset)
+
     plt.plot([0, 10], [betas[0], betas[1]*10], linewidth=2)
     plt.show()
 
