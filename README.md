@@ -1,4 +1,5 @@
 # Implemented:
+- Perceptron
 - Logistic Regression
 - Linear Regression
 - PCA
@@ -10,6 +11,5 @@
 - DecisionTreeRegression
 
 # To implement:
-- Perceptron
 - Neural Network
 - Support Vector Machine
