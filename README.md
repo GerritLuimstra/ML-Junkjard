@@ -1,4 +1,5 @@
 # Implemented:
+- Learning Vector Quantization
 - Perceptron
 - Logistic Regression
 - Linear Regression
