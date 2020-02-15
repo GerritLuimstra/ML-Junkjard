@@ -10,6 +10,8 @@ class RegressionTree:
         self.left = None
         self.right = None
         self.response = None
+        self.model = None
+        self.model_features = None
 
 
 class DecisionTreeRegressor:

@@ -1,4 +1,5 @@
 # Implemented:
+- M5 Regressor (or something similar)
 - Learning Vector Quantization
 - Perceptron
 - Logistic Regression
