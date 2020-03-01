@@ -7,7 +7,7 @@
     Note: This model extends rather than changes the functionality of the base regressor of sklearn and
           due to this it is still compatible with all other tooling surrounding these models.
 """
-from sklearn.linear_model import LinearRegression, Lasso, SGDRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn import datasets
 import pandas as pd
@@ -81,6 +81,9 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
         :param kwargs: Additional keyword arguments passed
         """
 
+        X = np.array(X)
+        y = np.array(y)
+
         # Call the fit function on the base decision tree regressor
         super().fit(X, y, *args, **kwargs)
 
@@ -94,8 +97,13 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
         # Since sklearn (for good reasons) does not store which sample belongs in what node,
         # we need to similary this behaviour by keeping track of which samples go into what node
         for index, node in enumerate(nodes):
-            self._node_lookup[node]["samples"].append(X.iloc[index])
-            self._node_lookup[node]["response"].append(y.iloc[index])
+
+            if not type(X) == np.ndarray:
+                self._node_lookup[node]["samples"].append(np.array(X.iloc[index]))
+                self._node_lookup[node]["response"].append(np.array(y.iloc[index]))
+            else:
+                self._node_lookup[node]["samples"].append(X[index])
+                self._node_lookup[node]["response"].append(y[index])
 
         # If the user wishes to only use the features using the path up for each node,
         # we need to obtain those features (sklearn does not provide them by default)
@@ -125,7 +133,7 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
                     raise RuntimeError("The base sklearn tree could not be made. Try different settings.")
 
                 # Add the features used to the path of this node
-                self._node_lookup[node]["node_features_in_path"] = set(X.columns[_features])
+                self._node_lookup[node]["node_features_in_path"] = set(_features)
 
         # Fit the selected model to the samples in each respective leaf node
         for node in self._node_lookup:
@@ -158,6 +166,8 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
         :param kwargs: Additional keyword arguments passed
         :return: The predicted response variable
         """
+        X = np.array(X)
+
         predictions = []
 
         for index, node in enumerate(self.apply(X)):
@@ -165,11 +175,11 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
             # Predict the normal value, if there is no model fit
             # This is due to the the user setting a min_samples_split
             if self._node_lookup[node]["model"] is None:
-                predictions.append(super().predict([X.iloc[index]])[0])
+                predictions.append(super().predict([X[index]])[0])
                 continue
 
             # Obtain the sample to be predicted
-            sample = X.iloc[index]
+            sample = X[index]
 
             # If set, only use the features that are along the path to the associated leaf
             if self.only_path_features:
@@ -178,7 +188,7 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
             # Make the prediction
             predictions.append(self._node_lookup[node]["model"].predict([np.array(sample)])[0])
 
-        return np.array(predictions)
+        return np.array(predictions, dtype=np.float64).reshape((X.shape[0]))
 
 
 if __name__ == "__main__":
