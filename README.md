@@ -1,4 +1,5 @@
 # Implemented:
+- Flexible Tree Regressor (my custom model)
 - M5 Regressor (or something similar)
 - Learning Vector Quantization
 - Perceptron
