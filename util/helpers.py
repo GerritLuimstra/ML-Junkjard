@@ -1,5 +1,6 @@
 import inspect
 
+
 def get_default_args(func):
     """
     Obtains the default parameters of a given function

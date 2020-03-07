@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     # Define the flexible models
     hitters_flex_model = FlexibleRandomForest(min_samples_leaf=10, min_samples_fit=20, only_path_features=False)
-    synthetic_flex_model = FlexibleRandomForest(min_samples_leaf=30, min_samples_fit=40, only_path_features=False)
+    synthetic_flex_model = FlexibleRandomForest(min_samples_leaf=30, min_samples_fit=35, only_path_features=False)
 
     # To show that it also easily works with other leaf estimators
     hitters_knn_flex_model = FlexibleRandomForest(leaf_estimator=KNeighborsRegressor(), min_samples_leaf=20)
@@ -122,18 +122,23 @@ if __name__ == "__main__":
     # Print out the results
     print("Hitters RMSE (BASE RF)")
     print(mean_squared_error(hitters_y_test, hitters_base_model.predict(hitters_X_test)))
-    print("Hitters RMSE (FLEX RF )")
+    print("Hitters RMSE (BASE RF CV)")
+    print(-cross_val_score(hitters_base_model, hitters_X_train, hitters_y_train, cv=10,
+                           scoring='neg_mean_squared_error').mean())
+    print("\nHitters RMSE (FLEX RF)")
     print(mean_squared_error(hitters_y_test, hitters_flex_model.predict(hitters_X_test)))
-    print("Hitters RMSE (KNN FLEX RF)")
+    print("Hitters RMSE (FLEX RF CV)")
+    print(-cross_val_score(hitters_flex_model, hitters_X_train, hitters_y_train, cv=10,
+                           scoring='neg_mean_squared_error').mean())
+    print("\nHitters RMSE (KNN RF FLEX)")
     print(mean_squared_error(hitters_y_test, hitters_knn_flex_model.predict(hitters_X_test)))
-    print("Synthetic RMSE (BASE RF)")
-    print(mean_squared_error(synthetic_y_test, synthetic_base_model.predict(synthetic_X_test)))
-    print("Synthetic RMSE (FLEX RF)")
-    print(mean_squared_error(synthetic_y_test, synthetic_flex_model.predict(synthetic_X_test)))
+    print("Hitters RMSE (KNN FLEX RF CV)")
+    print(-cross_val_score(hitters_knn_flex_model, hitters_X_train, hitters_y_train, cv=10,
+                           scoring='neg_mean_squared_error').mean())
 
     # To show that the model works with regular sklearn functionality
-    print("Cross validated synthetic score")
-    print(-cross_val_score(synthetic_flex_model, synthetic_X_train, synthetic_y_train, cv=10,
+    print("\nCross validated synthetic score")
+    print(-cross_val_score(hitters_flex_model, synthetic_X_train, synthetic_y_train, cv=10,
                            scoring='neg_mean_squared_error').mean())
 
     # We see that this model outperforms the base model on the synthetic dataset and does not under perform very bad on the other data

@@ -4,6 +4,8 @@
     rather than a simple constant, perhaps it is nice to be able to fit a model on such leaf node data.
     Loosely modelled after Quinlan's M5 trees, I have implemented something I coin a "Flexible Tree Regressor".
 
+    Optionally, a custom 'clipping trick' can be used in which the model tries to determine in which cases it is smart to use the leaf model.
+
     Note: This model extends rather than changes the functionality of the base regressor of sklearn and
           due to this it is still compatible with all other tooling surrounding these models.
 """
@@ -25,7 +27,8 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
                  # Custom FlexibleTreeRegressor settings
                  min_samples_fit=None,
                  leaf_estimator=LinearRegression(),
-                 only_path_features=True,
+                 only_path_features=False,
+                 use_clipping_trick=True,
 
                  criterion="mse",
                  splitter="best",
@@ -47,6 +50,7 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
         :param leaf_estimator: The estimator to use on the leaf nodes
         :param only_path_features: Whether to only restrict the leaf-models to the features of the path
                                    This makes it behave similarly to an M5 model
+        :param use_clipping_trick: Whether or not to use the clipping trick
 
         Note: The other parameters are for sklearn itself
         """
@@ -70,6 +74,7 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
         self.min_samples_fit = min_samples_fit
         self.leaf_estimator = leaf_estimator
         self.only_path_features = only_path_features
+        self.use_clipping_trick = use_clipping_trick
 
     def fit(self, X, y, *args, **kwargs):
         """
@@ -154,9 +159,52 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
             # Fit the model to the samples in the leaf node
             self._node_lookup[node]["model"] = copy.copy(self.leaf_estimator).fit(node_samples, self._node_lookup[node]["response"])
 
-            # Remove the samples and responses (free memory)
+            # Compute the cluster centroid
+            self._node_lookup[node]["centroid"] = np.hstack((np.mean(np.array(self._node_lookup[node]["samples"]), axis=0),
+                                                   np.mean(self._node_lookup[node]["response"])))
+
+            # Convert the data to numpy arrays to be dealt with later
             self._node_lookup[node]["samples"] = None
             self._node_lookup[node]["response"] = None
+
+    def _distance(self, v1, v2, p):
+        """
+        Computes the distance between two vectors
+
+        :param np.array v1: The first vector
+        :param np.array v2: The second vector
+        :param int p : The 1/p exponent is used to define the distance metric (based on the Minkowski formula)
+        """
+        return sum(abs(v1 - v2)**p)**(1/p)
+
+    def _clip_trick(self, sample, node):
+        """
+        Finds the optimal prediction between the mean vector (the default outcome) or the predicted point on the line
+
+        It determines whether the point (X, 0) is closer to (X_mu, y_mu) or (X, y_pred).
+        It will choose the optimal prediction based on this insight.
+
+        :param sample: The sample to predict
+        :param node: The node the sample is in
+        :return: The optimal outcome of either the mean or the predicted point by the regression line
+        """
+
+        # Compute all the necessary information for the clipping trick
+        sample_point = np.hstack((np.array(sample), [0]))
+        mean_point = self._node_lookup[node]["centroid"]
+        prediction = self._node_lookup[node]["model"].predict([sample])[0]
+
+        if type(prediction) == np.ndarray:
+            prediction = prediction[0]
+
+        prediction_point = np.hstack((np.array(sample), [prediction]))
+
+        # Compute the distances between the sample point and mean vs the prediction point
+        prediction_distance = self._distance(sample_point, prediction_point, 2)
+        mean_distance = self._distance(sample_point, mean_point, 2)
+
+        # See which prediction is closer
+        return prediction if prediction_distance < mean_distance else mean_point[-1]
 
     def predict(self, X, *args, **kwargs):
         """
@@ -185,8 +233,13 @@ class FlexibleTreeRegressor(DecisionTreeRegressor):
             if self.only_path_features:
                 sample = sample[list(self._node_lookup[node]["node_features_in_path"])]
 
-            # Make the prediction
-            predictions.append(self._node_lookup[node]["model"].predict([np.array(sample)])[0])
+            # See if we can use the clipping trick
+            if isinstance(self._node_lookup[node]["model"], LinearRegression) and self.use_clipping_trick:
+                # Make the prediction using the clip trick
+                predictions.append(self._clip_trick(sample, node))
+            else:
+                # Make a regular prediction
+                predictions.append(self._node_lookup[node]["model"].predict([np.array(sample)])[0])
 
         return np.array(predictions, dtype=np.float64).reshape((X.shape[0]))
 
@@ -225,8 +278,8 @@ if __name__ == "__main__":
     synthetic_base_model.fit(synthetic_X_train, synthetic_y_train)
 
     # Define the flexible model
-    hitters_flex_model = FlexibleTreeRegressor(min_samples_leaf=20, min_samples_fit=30, only_path_features=False)
-    synthetic_flex_model = FlexibleTreeRegressor(min_samples_leaf=30, min_samples_fit=15, only_path_features=False)
+    hitters_flex_model = FlexibleTreeRegressor(min_samples_leaf=20, min_samples_fit=30, only_path_features=False, use_clipping_trick=True)
+    synthetic_flex_model = FlexibleTreeRegressor(min_samples_leaf=20, min_samples_fit=30, only_path_features=False, use_clipping_trick=True)
 
     # To show that it also easily works with other leaf estimators
     hitters_knn_flex_model = FlexibleTreeRegressor(leaf_estimator=KNeighborsRegressor(), min_samples_leaf=20)
@@ -239,18 +292,25 @@ if __name__ == "__main__":
     # Print out the results
     print("Hitters RMSE (BASE)")
     print(mean_squared_error(hitters_y_test, hitters_base_model.predict(hitters_X_test)))
-    print("Hitters RMSE (FLEX)")
+    print("Hitters RMSE (BASE CV)")
+    print(-cross_val_score(hitters_base_model, hitters_X_train, hitters_y_train, cv=10, scoring='neg_mean_squared_error').mean())
+    print("\nHitters RMSE (FLEX)")
     print(mean_squared_error(hitters_y_test, hitters_flex_model.predict(hitters_X_test)))
-    print("Hitters RMSE (KNN FLEX)")
+    print("Hitters RMSE (FLEX CV)")
+    print(-cross_val_score(hitters_flex_model, hitters_X_train, hitters_y_train, cv=10, scoring='neg_mean_squared_error').mean())
+    print("\nHitters RMSE (KNN FLEX)")
     print(mean_squared_error(hitters_y_test, hitters_knn_flex_model.predict(hitters_X_test)))
-    print("Synthetic RMSE (BASE)")
+    print("Hitters RMSE (KNN FLEX CV)")
+    print(-cross_val_score(hitters_knn_flex_model, hitters_X_train, hitters_y_train, cv=10, scoring='neg_mean_squared_error').mean())
+
+    print("\nSynthetic RMSE (BASE)")
     print(mean_squared_error(synthetic_y_test, synthetic_base_model.predict(synthetic_X_test)))
     print("Synthetic RMSE (FLEX)")
     print(mean_squared_error(synthetic_y_test, synthetic_flex_model.predict(synthetic_X_test)))
 
     # To show that the model works with regular sklearn functionality
-    print("Cross validated synthetic score")
-    print(-cross_val_score(synthetic_flex_model, synthetic_X_train, synthetic_y_train, cv=10, scoring='neg_mean_squared_error').mean())
+    print("\nCross validated synthetic score")
+    print(-cross_val_score(hitters_flex_model, synthetic_X_train, synthetic_y_train, cv=10, scoring='neg_mean_squared_error').mean())
 
     # We see that this model outperforms the base model (on these two datasets)
 
