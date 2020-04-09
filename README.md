@@ -1,4 +1,5 @@
 # Implemented:
+- (Elementary) Multivariate Gradient Descent
 - Flexible Random Forest Regressor (RF support for my custom model)
 - Flexible Tree Regressor (my custom model)
 - M5 Regressor (or something similar)
