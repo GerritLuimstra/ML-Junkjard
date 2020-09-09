@@ -13,6 +13,11 @@ from sklearn import preprocessing
 class PCA:
 
     def __init__(self, n_components):
+        """
+        Initializes the PCA transformer
+
+        :param n_components: The number of principle components to obtain
+        """
         self.n_components = n_components
         self.component_variance_explained = None
         self.total_variance_explained = None
@@ -20,12 +25,10 @@ class PCA:
 
     def fit(self, X):
         """
-        Obtains the first 'k' principal components of the given data
-        NOTE: This does not apply any centering/scaling!
+        Performs dimensionality reduction to obtain 'k' principal components of the given data
 
         :param pandas.DataFrame X: The data of which the components will be extracted
         """
-
         if self.n_components > X.shape[1]:
             raise Exception("ERROR: Attempt to use more components than features!")
 
@@ -54,11 +57,9 @@ class PCA:
     def transform(self, X):
         """
         Transforms the given input X using the principal components obtained from the fit
-        NOTE: This does not apply any centering/scaling!
 
         :param pandas.DataFrame X: The data to be transformed
         """
-
         if self.W is None:
             raise Exception("PrincipalComponentAnalysis is not fit yet!")
 
@@ -66,6 +67,12 @@ class PCA:
         X_scaled = (X - np.mean(X, axis=0))
 
         return np.dot(X_scaled, self.W)
+
+    def explained_variance_ratio(self):
+        return self.component_variance_explained
+
+    def total_explained_variance(self):
+        return self.total_variance_explained
 
 
 if __name__ == "__main__":
@@ -85,10 +92,11 @@ if __name__ == "__main__":
     pca_sklearn.fit(X)
 
     # Verify that they are equal
-    print(pca.component_variance_explained)
+    print(pca.explained_variance_ratio())
     print(pca_sklearn.explained_variance_ratio_)
 
     # They are equal up to a sign change
+    # This is only a problem if the 'eig' function is used instead of 'eigh'
     # See: https://stackoverflow.com/questions/58666635/implementing-pca-with-numpy
     print(pca.transform(X))
     print(pca_sklearn.transform(X))
