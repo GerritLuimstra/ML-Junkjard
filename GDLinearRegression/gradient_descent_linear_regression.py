@@ -88,7 +88,7 @@ class GDLinearRegressor:
         # We need a weight vector
         assert self.W is not None
 
-        # If there is a bias, each feature now needs
+        # If there is a bias, we add a column of ones to the feature vectors
         if self.include_bias:
             X = np.insert(X, 0, values=1, axis=1)
 
