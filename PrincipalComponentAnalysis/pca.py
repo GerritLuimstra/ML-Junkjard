@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from numpy import linalg as LA
 from sklearn.decomposition import PCA as PCA_SKLEARN
+from sklearn import preprocessing
 
 
 class PCA:
@@ -28,15 +29,18 @@ class PCA:
         if self.n_components > X.shape[1]:
             raise Exception("ERROR: Attempt to use more components than features!")
 
+        # Scale the input
+        X_scaled = (X - np.mean(X, axis=0))
+
         # Compute the covariance matrix
-        C = np.cov(X.T)
+        C = np.cov(X_scaled.T)
 
         # Compute the eigen-values and vectors of the covariance matrix
-        eigen_values, eigen_vectors = LA.eig(C)
+        eigen_values, eigen_vectors = LA.eig(C)  # TODO: we should probably use eigh here!
 
         # Sort the eigen vectors by their eigen values
-        sorted_indices = np.argsort(abs(eigen_values))[::-1]
-        sorted_eigen_vectors = eigen_vectors[sorted_indices].T
+        sorted_indices = np.argsort(eigen_values)[::-1]
+        sorted_eigen_vectors = eigen_vectors[:, sorted_indices]
 
         # Compute the variance explained
         total_variance = sum(eigen_values)
@@ -45,7 +49,7 @@ class PCA:
         self.total_variance_explained = sum(self.component_variance_explained[:self.n_components])
 
         # Select the first 'k' eigen vectors to form W
-        self.W = sorted_eigen_vectors[:self.n_components].T
+        self.W = sorted_eigen_vectors[:, :self.n_components]
 
     def transform(self, X):
         """
@@ -58,7 +62,10 @@ class PCA:
         if self.W is None:
             raise Exception("PrincipalComponentAnalysis is not fit yet!")
 
-        return X.dot(self.W)
+        # Scale the input
+        X_scaled = (X - np.mean(X, axis=0))
+
+        return np.dot(X_scaled, self.W)
 
 
 if __name__ == "__main__":
@@ -81,7 +88,7 @@ if __name__ == "__main__":
     print(pca.component_variance_explained)
     print(pca_sklearn.explained_variance_ratio_)
 
-    # They are equal! :)
-
-
-
+    # They are equal up to a sign change
+    # See: https://stackoverflow.com/questions/58666635/implementing-pca-with-numpy
+    print(pca.transform(X))
+    print(pca_sklearn.transform(X))
