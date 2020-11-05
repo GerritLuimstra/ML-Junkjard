@@ -1,4 +1,5 @@
 # Implemented:
+- Kohonen's Self Organizing Map
 - Vector Quantization
 - Agglomerative Clustering
 - DBScan
