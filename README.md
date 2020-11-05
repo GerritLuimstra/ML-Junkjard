@@ -1,4 +1,5 @@
 # Implemented:
+- AgglomerativeClustering
 - DBScan
 - Gradient Descent based Multivariate Linear Regressor
 - (Elementary) Multivariate Gradient Descent
