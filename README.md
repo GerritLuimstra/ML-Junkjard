@@ -1,5 +1,6 @@
 # Implemented:
-- AgglomerativeClustering
+- Vector Quantization
+- Agglomerative Clustering
 - DBScan
 - Gradient Descent based Multivariate Linear Regressor
 - (Elementary) Multivariate Gradient Descent
