@@ -28,7 +28,7 @@ class DBScan:
 
     def fit(self, X: np.array):
         """
-        Performs the cluster on the given data
+        Performs the clustering on the given data
         :param X: The given data
         """
 
